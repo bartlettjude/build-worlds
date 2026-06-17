@@ -1,6 +1,6 @@
 # BUILD WORLDS — rebuild
 
-Luxury tour & concert photography site for **Alex O'Bryn**.
+Luxury tour & concert photography site for **Alex O'Brien**.
 Hand-built static site (no build step). Warm black + burnt orange, editorial/magazine layout,
 built around the vertical concert imagery.
 

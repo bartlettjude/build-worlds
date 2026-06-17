@@ -43,7 +43,7 @@
   }
   function shotEl(img, list, idx, cap){
     const a=document.createElement('div'); a.className='shot';
-    a.innerHTML=`<img loading="lazy" src="${img.src}" alt="${cap||'Alex O\'Bryn — tour photography'}">${cap?`<span class="cap">${cap}</span>`:''}`;
+    a.innerHTML=`<img loading="lazy" src="${img.src}" alt="${cap||'Alex O\'Brien — tour photography'}">${cap?`<span class="cap">${cap}</span>`:''}`;
     a.addEventListener('click', ()=>openLB(list, idx));
     return a;
   }
