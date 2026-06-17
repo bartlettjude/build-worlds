@@ -89,7 +89,6 @@
       name.className = 'tile name reveal';
       name.href = `work.html#${k}`;
       name.style.setProperty('--rot', ((ai%2?1:-1)*(1+ (ai*7%3))).toFixed(1)+'deg');
-      name.dataset.par = ((ai%2?1:-1)*0.07).toFixed(2);          // name tiles drift opposite per row
       name.innerHTML = `<span class="t-num">0${ai+1}</span><span class="t-name">${g.label.replace(/&/,'<em>&</em>')}</span><span class="t-meta">${String(g.count).padStart(2,'0')} frames<i>↗</i></span>`;
       scatter.appendChild(name);
       // a few of THIS artist's photos
@@ -99,7 +98,6 @@
         const t = document.createElement('div');
         t.className = 'tile photo reveal';
         t.style.setProperty('--rot', (((n*13)%5)-2).toFixed(1)+'deg');
-        t.dataset.par = ((((n*37)%9)-4)/55).toFixed(3);          // gentle, varied per-photo drift
         t.innerHTML = `<img loading="lazy" src="${im.src}" alt="${g.label}"><span class="cap">${g.label}</span>`;
         t.addEventListener('click', ()=> openLB(lbList, idx));
         scatter.appendChild(t); n++;
@@ -118,7 +116,6 @@
     VIDS.forEach(([id,label],i)=>{
       const a=document.createElement('a');
       a.className='vid reveal'; a.href=`https://www.youtube.com/watch?v=${id}`; a.target='_blank'; a.rel='noopener';
-      a.dataset.par = ((i%3-1)*0.05).toFixed(2);                 // staggered drift across the 3 columns
       a.innerHTML=`<img loading="lazy" src="https://i.ytimg.com/vi/${id}/hqdefault.jpg" alt="${label}"><span class="play"><i></i></span><span class="vlabel">${label}</span>`;
       vwrap.appendChild(a);
     });
@@ -204,5 +201,6 @@
     }
     requestAnimationFrame(loop);
   }
-  if (!reduce){ parCollect(); requestAnimationFrame(loop); }
+  /* desktop only — scroll-linked parallax lags native touch scrolling and causes stutter on phones */
+  if (!reduce && canHover){ parCollect(); requestAnimationFrame(loop); }
 })();
