@@ -362,3 +362,38 @@ footer{ border-top:1px solid var(--line); padding:40px 0; }
   .hero-glow{ display:none; }
   .about-portrait img{ scale:1; }
 }
+
+/* ============================================================ MOBILE POLISH */
+@media(max-width:640px){
+  /* HERO — calmer + readable */
+  .hero{ min-height:90svh; padding-top:118px; padding-bottom:48px; }
+  .hero-title{ font-size:clamp(3.1rem,21vw,5rem); gap:.02em; }
+  .hero-guys{ width:80vw; opacity:.38; }
+  .hero-glow{ width:118vw; top:42%; }
+  .hero .kicker{ font-size:.62rem; letter-spacing:.2em; }
+  .hero-cta{ flex-direction:column; align-items:stretch; width:100%; max-width:340px; margin-inline:auto; }
+  .hero-cta .btn{ justify-content:center; }
+
+  /* declutter the oversized decorative wordmark */
+  .ghost{ display:none; }
+
+  /* THE WALL — clean single column, no skew/rotation */
+  .tile{ transform:none !important; margin-bottom:14px; }
+  .wall-scatter{ column-gap:14px; }
+
+  /* section rhythm — less cavernous spacing */
+  .shead{ padding-block:clamp(54px,15vw,80px) 26px; }
+  .shead h2{ max-width:none; }
+
+  /* CONTACT — headline must never overflow */
+  .contact{ padding-block:clamp(66px,18vw,108px); }
+  .contact .big{ font-size:clamp(2.7rem,15vw,4.2rem); overflow-wrap:break-word; }
+  .contact .lead{ margin:20px auto 32px; }
+  .contact-links{ gap:22px 30px; margin-top:36px; }
+
+  /* prominent button, sized for thumbs */
+  .btn--lg{ padding:1.15em 1.8em; font-size:.82rem; letter-spacing:.16em; }
+
+  /* footer stacks cleanly */
+  .foot-grid{ flex-direction:column; align-items:flex-start; gap:14px; }
+}
