@@ -78,7 +78,8 @@
   /* ---------- HOME: merged "wall" — artist name tiles + their photos, scattered ---------- */
   const scatter = $('#scatter');
   if (scatter){
-    const artists = order.filter(k => k!=='selects' && G[k]);
+    const FEATURED = 4;                                  // homepage shows a few; the rest live in the full archive
+    const artists = order.filter(k => k!=='selects' && G[k]).slice(0, FEATURED);
     const lbList = [];                                  // photos only, for the lightbox
     let n = 0;
     artists.forEach((k, ai) => {
