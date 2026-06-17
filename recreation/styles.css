@@ -33,7 +33,7 @@
 }
 
 *{ box-sizing:border-box; margin:0; padding:0; }
-html{ scroll-behavior:smooth; -webkit-font-smoothing:antialiased; }
+html{ scroll-behavior:smooth; -webkit-font-smoothing:antialiased; overflow-x:clip; }
 body{
   background:var(--ink);
   color:var(--cream);
@@ -205,7 +205,7 @@ h1,h2,h3{ font-family:var(--display); font-weight:400; line-height:.95; letter-s
 /* ============================================================ WORK GRID (masonry via columns) */
 .masonry{ columns:3; column-gap:clamp(10px,1.4vw,20px); }
 @media(max-width:900px){ .masonry{ columns:2; } }
-@media(max-width:560px){ .masonry{ columns:1; } }
+@media(max-width:380px){ .masonry{ columns:1; } }
 .shot{ break-inside:avoid; margin-bottom:clamp(10px,1.4vw,20px); position:relative; overflow:hidden; border-radius:var(--r); background:var(--panel); cursor:none; }
 .shot img{ width:100%; height:auto; transition:transform .9s var(--ease), filter .6s; filter:grayscale(.15) contrast(1.03); }
 .shot::after{ content:""; position:absolute; inset:0; background:linear-gradient(to top, rgba(11,10,8,.7), transparent 50%); opacity:0; transition:.5s; }
@@ -217,7 +217,7 @@ h1,h2,h3{ font-family:var(--display); font-weight:400; line-height:.95; letter-s
 /* ============================================================ THE WALL — merged work × roster */
 .wall-scatter{ columns:3; column-gap:clamp(12px,1.5vw,20px); }
 @media(max-width:900px){ .wall-scatter{ columns:2; } }
-@media(max-width:540px){ .wall-scatter{ columns:1; } }
+@media(max-width:380px){ .wall-scatter{ columns:1; } }
 .tile{ break-inside:avoid; margin-bottom:clamp(12px,1.5vw,20px); border-radius:var(--r); transform:rotate(var(--rot,0deg)); transition:transform .5s var(--ease); cursor:none; position:relative; }
 .tile:hover{ transform:rotate(0deg) scale(1.012); z-index:5; }
 
@@ -396,4 +396,7 @@ footer{ border-top:1px solid var(--line); padding:40px 0; }
 
   /* footer stacks cleanly */
   .foot-grid{ flex-direction:column; align-items:flex-start; gap:14px; }
+
+  /* keep decorative glow from poking past the viewport edge */
+  .orb{ width:96vw; }
 }
