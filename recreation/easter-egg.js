@@ -141,51 +141,90 @@
       boom.querySelector('.ee-reset').addEventListener('click', () => location.reload());
     }, 850);
 
-    startClownMusic();
-    slideWhistle();
+    bigImpact();                       // riser → sub-drop the moment you press
+    setTimeout(startHardstyle, 850);   // the beat DROPS as BOOM lands
   }
 
-  /* ---------- audio: synthesized goofy circus/clown music (no files, no copyright) ---------- */
-  let actx = null, musicTimer = null;
+  /* ---------- audio: synthesized HARDSTYLE — distorted kicks + reverse bass + screech lead.
+       Bass-boosted, slammed through a limiter for max capacity. No files, no copyright. ---------- */
+  let actx = null, musicTimer = null, BUS = null, noiseBuf = null;
   const AC = () => actx || (actx = new (window.AudioContext || window.webkitAudioContext)());
   const F = n => 440 * Math.pow(2, n / 12);                 // n = semitones from A4
-  function tone(freq, t, dur, type, vol) {
+  function noise() {
+    if (noiseBuf) return noiseBuf;
+    const c = AC(), b = c.createBuffer(1, c.sampleRate, c.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    return noiseBuf = b;
+  }
+  function distCurve(k) {                                    // hard waveshaper for that gritty grind
+    const n = 1024, c = new Float32Array(n), deg = Math.PI / 180;
+    for (let i = 0; i < n; i++) { const x = i * 2 / n - 1; c[i] = (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x)); }
+    return c;
+  }
+  function buildChain() {                                    // BUS -> distortion -> bass boost -> highpass -> limiter -> out
+    const c = AC();
+    const inGain = c.createGain(); inGain.gain.value = 1;
+    const dist = c.createWaveShaper(); dist.curve = distCurve(90); dist.oversample = '4x';
+    const low = c.createBiquadFilter(); low.type = 'lowshelf'; low.frequency.value = 110; low.gain.value = 11;   // BASS BOOST
+    const hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 26;
+    const comp = c.createDynamicsCompressor();              // slam it to the ceiling
+    comp.threshold.value = -8; comp.knee.value = 2; comp.ratio.value = 20; comp.attack.value = 0.002; comp.release.value = 0.14;
+    const master = c.createGain(); master.gain.value = 0.9;
+    inGain.connect(dist); dist.connect(low); low.connect(hp); hp.connect(comp); comp.connect(master); master.connect(c.destination);
+    return inGain;
+  }
+  function kick(t) {                                         // hardstyle kick: punchy click + distorted pitch-drop body
+    const c = AC();
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(210, t); o.frequency.exponentialRampToValueAtTime(46, t + 0.10);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(1.5, t + 0.004); g.gain.exponentialRampToValueAtTime(0.001, t + 0.34);
+    o.connect(g).connect(BUS); o.start(t); o.stop(t + 0.36);
+    const n = c.createBufferSource(); n.buffer = noise();
+    const nf = c.createBiquadFilter(); nf.type = 'bandpass'; nf.frequency.value = 2600;
+    const ng = c.createGain(); ng.gain.setValueAtTime(0.6, t); ng.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+    n.connect(nf).connect(ng).connect(BUS); n.start(t); n.stop(t + 0.05);
+  }
+  function reverseBass(t, dur, semi) {                       // offbeat distorted saw between kicks
     const c = AC(), o = c.createOscillator(), g = c.createGain();
-    o.type = type || 'square'; o.frequency.setValueAtTime(freq, t);
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol || 0.16, t + 0.012);
-    g.gain.exponentialRampToValueAtTime(0.0006, t + dur);
-    o.connect(g).connect(c.destination); o.start(t); o.stop(t + dur + 0.03);
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(F(semi - 12), t);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.8, t + 0.006);
+    g.gain.setValueAtTime(0.8, t + dur * 0.7); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(g).connect(BUS); o.start(t); o.stop(t + dur + 0.02);
   }
-  function honk(t) {
-    const c = AC(), o = c.createOscillator(), g = c.createGain(); o.type = 'sawtooth';
-    o.frequency.setValueAtTime(F(-2), t); o.frequency.exponentialRampToValueAtTime(F(-9), t + 0.16);
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.22, t + 0.02); g.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
-    o.connect(g).connect(c.destination); o.start(t); o.stop(t + 0.24);
+  function lead(t, dur, semi) {                              // detuned supersaw + octave = screech
+    const c = AC(), g = c.createGain(); g.connect(BUS);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.30, t + 0.006); g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+    const base = F(semi);
+    [-7, -2, 2, 7].forEach(off => { const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = base + off; o.connect(g); o.start(t); o.stop(t + dur + 0.02); });
+    const oo = c.createOscillator(), og = c.createGain();    // octave-up square screech
+    oo.type = 'square'; oo.frequency.value = base * 2;
+    og.gain.setValueAtTime(0.0001, t); og.gain.linearRampToValueAtTime(0.12, t + 0.006); og.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+    oo.connect(og).connect(BUS); oo.start(t); oo.stop(t + dur + 0.02);
   }
-  function slideWhistle() {
-    const c = AC(), t = c.currentTime + 0.02, o = c.createOscillator(), g = c.createGain(); o.type = 'sine';
-    o.frequency.setValueAtTime(F(-12), t); o.frequency.exponentialRampToValueAtTime(F(15), t + 0.5); o.frequency.exponentialRampToValueAtTime(F(-5), t + 0.95);
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.2, t + 0.05); g.gain.exponentialRampToValueAtTime(0.001, t + 0.98);
-    o.connect(g).connect(c.destination); o.start(t); o.stop(t + 1);
-  }
-  function startClownMusic() {
+  function bigImpact() {                                     // riser sweep -> sub drop, on press
     const c = AC(); if (c.state === 'suspended') c.resume();
-    const beat = 0.34;
-    // goofy circus lead (semitones from A4) + durations in beats
-    const lead = [3, 3, 10, 7, 3, 8, 5, -2, -2, 5, 3, -2, 0, -1, -2, -5];
-    const dur = [.5, .5, .5, .5, 1, .5, .5, .5, .5, .5, .5, 1, .5, .5, .5, 1];
-    const bass = [-9, -2, -9, -2, -9, -2, -9, -2];          // oom-pah roots
-    const loopLen = 8 * beat;
+    if (!BUS) BUS = buildChain();
+    const t = c.currentTime + 0.02;
+    const n = c.createBufferSource(); n.buffer = noise(); n.loop = true;
+    const f = c.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.3;
+    f.frequency.setValueAtTime(200, t); f.frequency.exponentialRampToValueAtTime(8500, t + 0.85);
+    const ng = c.createGain(); ng.gain.setValueAtTime(0.0001, t); ng.gain.linearRampToValueAtTime(0.55, t + 0.8); ng.gain.exponentialRampToValueAtTime(0.001, t + 1.05);
+    n.connect(f).connect(ng).connect(BUS); n.start(t); n.stop(t + 1.1);
+    const it = t + 0.82, o = c.createOscillator(), g = c.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(170, it); o.frequency.exponentialRampToValueAtTime(36, it + 0.5);
+    g.gain.setValueAtTime(0.0001, it); g.gain.linearRampToValueAtTime(1.7, it + 0.01); g.gain.exponentialRampToValueAtTime(0.001, it + 0.7);
+    o.connect(g).connect(BUS); o.start(it); o.stop(it + 0.75);
+  }
+  function startHardstyle() {
+    const c = AC(); if (c.state === 'suspended') c.resume();
+    if (!BUS) BUS = buildChain();
+    const beat = 60 / 150;                                   // 150 BPM
+    const riff = [10, 10, 5, 10, 13, 10, 5, 3];              // G-minor angry eighths: G G D G Bb G D C
+    const loopLen = 4 * beat;
     function schedule(start) {
-      for (let b = 0; b < 8; b++) {
-        const t = start + b * beat;
-        tone(F(bass[b] - 12), t, beat * 0.5, 'sawtooth', 0.24);          // OOM
-        tone(F(bass[b] + 3), t + beat * 0.5, beat * 0.4, 'square', 0.10); // pah
-        tone(F(bass[b] + 7), t + beat * 0.5, beat * 0.4, 'square', 0.08);
-      }
-      let t = start;
-      for (let i = 0; i < lead.length; i++) { tone(F(lead[i]), t, dur[i] * beat * 0.95, 'square', 0.15); t += dur[i] * beat; }
-      honk(start + 7.25 * beat);
+      for (let b = 0; b < 4; b++) kick(start + b * beat);                       // four-on-the-floor
+      for (let b = 0; b < 4; b++) reverseBass(start + b * beat + beat * 0.5, beat * 0.45, -2); // offbeat
+      for (let i = 0; i < 8; i++) lead(start + i * beat * 0.5, beat * 0.46, riff[i]);          // screech riff
     }
     let next = c.currentTime + 0.08; schedule(next); next += loopLen;
     musicTimer = setInterval(() => { schedule(next); next += loopLen; }, loopLen * 1000);
